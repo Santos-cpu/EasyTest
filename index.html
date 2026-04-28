@@ -3,55 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyTest - Flashcards de PDF</title>
+    <title>EasyTest - Study Smarter</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <div class="container">
         <section id="upload-area">
-            <h1>Crea tus Flashcards</h1>
-            <p>Sube un PDF con preguntas y nosotros hacemos el resto</p>
-            
-            <div class="upload-box">
+            <h1 class="hero-title">EasyTest</h1>
+            <p class="hero-subtitle">Sube tu PDF y genera tarjetas de estudio al instante.</p>
+            <div class="upload-card">
                 <input type="file" id="file-input" style="display: none;" accept="application/pdf" onchange="updateFileName()">
-                
-                <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-                    Seleccionar PDF
-                </button>
-                
-                <p id="file-name-display" style="margin-top: 15px; color: #34d399; font-weight: bold;"></p>
-                
-                <button id="continue-btn" class="continue-btn">Continuar ➔</button>
+                <button class="btn-secondary" onclick="document.getElementById('file-input').click()">Seleccionar PDF</button>
+                <p id="file-name-display"></p>
+                <button id="continue-btn" class="btn-primary">Continuar ➔</button>
             </div>
         </section>
 
         <section id="mode-selection" style="display: none;">
-            <h2>Elige tu modo de juego</h2>
+            <h2 class="section-title">Elige un modo</h2>
             <div class="mode-grid">
-                <div class="mode-card" data-mode="estudio"><h3>Modo Estudio</h3><p>Repasa sin presión</p></div>
-                <div class="mode-card" data-mode="puntuacion"><h3>Puntuación</h3><p>Mide tus aciertos</p></div>
-                <div class="mode-card" data-mode="examen"><h3>Examen</h3><p>Simulacro real</p></div>
-                <div class="mode-card" data-mode="hardcore"><h3>Hardcore</h3><p>Los fallos restan</p></div>
+                <div class="mode-item" data-mode="estudio">
+                    <h3>Modo Estudio</h3>
+                    <p>Repasa a tu ritmo sin presión.</p>
+                </div>
+                <div class="mode-item" data-mode="puntuacion">
+                    <h3>Puntuación</h3>
+                    <p>Compite contra ti mismo.</p>
+                </div>
+                <div class="mode-item" data-mode="examen">
+                    <h3>Examen</h3>
+                    <p>Simulacro de 30 preguntas.</p>
+                </div>
+                <div class="mode-item" data-mode="hardcore">
+                    <h3>Hardcore</h3>
+                    <p>Los fallos restan puntos.</p>
+                </div>
             </div>
+            <button class="btn-text" onclick="restartApp()">⬅ Cancelar y salir</button>
         </section>
 
         <section id="flashcard-area" style="display: none;">
-            <div class="progress-bar">
-                Pregunta <span id="current-number">0</span> de <span id="total-number">0</span>
+            <div class="nav-controls">
+                <button class="btn-small" onclick="backToModes()">⬅ Volver</button>
+                <div class="progress-info">Pregunta <span id="current-number">1</span>/<span id="total-number">50</span></div>
+                <button class="btn-small" onclick="restartApp()">Salir ✖</button>
             </div>
+            
             <div id="card-container">
                 </div>
         </section>
 
         <section id="results-area" style="display: none;">
-            <h2>Resultados Finales</h2>
-            <div class="results-stats">
-                <p>Aciertos: <span id="correct-res">0</span></p>
-                <p>Fallos: <span id="incorrect-res">0</span></p>
+            <h2 class="section-title">¡Test Completado!</h2>
+            <div class="results-grid">
+                <div class="res-box">
+                    <span id="correct-res">0</span>
+                    <label>Aciertos</label>
+                </div>
+                <div class="res-box">
+                    <span id="incorrect-res">0</span>
+                    <label>Fallos</label>
+                </div>
+            </div>
+            <div class="accuracy-container">
                 <p>Precisión: <span id="accuracy-res">0%</span></p>
             </div>
-            <button class="restart-btn" onclick="restartApp()">Hacer otro test</button>
+            <button class="btn-primary" onclick="restartApp()">Hacer otro test</button>
         </section>
     </div>
 
