@@ -43,23 +43,7 @@ const btnRestartMode = document.getElementById('btn-restart-mode');
 const btnNewPdf = document.getElementById('btn-new-pdf');
 
 // Datos de prueba (Luego los borraremos cuando Python extraiga las reales)
-const mockQuestions = [
-    { 
-        question: "¿Cuál es la capital de Francia?", 
-        options: ["Madrid", "París", "Roma", "Berlín"], 
-        correctAnswer: "París" 
-    },
-    { 
-        question: "¿En qué año llegó el hombre a la luna?", 
-        options: ["1969", "1959", "1989"], 
-        correctAnswer: "1969" 
-    },
-    { 
-        question: "¿Cuál es el lenguaje estándar para estilizar páginas web?", 
-        options: ["HTML", "Python", "CSS", "JavaScript"], 
-        correctAnswer: "CSS" 
-    }
-];
+const mockQuestions = [];
 
 let currentIndex = 0;
 let correctCount = 0;
