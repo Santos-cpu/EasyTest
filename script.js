@@ -162,6 +162,8 @@ function loadQuestion() {
 }
 
 function checkAnswer(selectedOption, correctAnswer, clickedBtn) {
+    const currentQ = mockQuestions[currentIndex]; // Cogemos la pregunta actual para leer su explicación
+    
     if (userAnswers[currentIndex] === null) {
         if (selectedOption === correctAnswer) {
             correctCount++;
@@ -169,6 +171,7 @@ function checkAnswer(selectedOption, correctAnswer, clickedBtn) {
             feedbackTitle.textContent = "¡Correcto! ✅";
             feedbackTitle.style.color = "#2ecc71";
             clickedBtn.classList.add('selected-correct');
+            feedbackMessage.innerHTML = "¡Muy bien hecho!";
         } else {
             incorrectCount++;
             scoreIncorrectDisplay.textContent = incorrectCount;
@@ -176,10 +179,17 @@ function checkAnswer(selectedOption, correctAnswer, clickedBtn) {
             feedbackTitle.style.color = "#e74c3c";
             cardBack.classList.add('is-incorrect');
             clickedBtn.classList.add('selected-incorrect');
+            feedbackMessage.innerHTML = `La respuesta correcta era:<br><strong style="color:#fff;">${correctAnswer}</strong>`;
         }
-        feedbackMessage.textContent = `La respuesta correcta era: ${correctAnswer}`;
+        
+        // 🔴 NUEVO: Si Python ha encontrado una explicación, la inyectamos abajo
+        if (currentQ.explanation) {
+            feedbackMessage.innerHTML += `<br><br><span style="display:block; margin-top:15px; padding-top:15px; border-top:1px solid #333; color:#aaa; font-size:15px; font-weight:normal; line-height:1.5;">💡 <em>${currentQ.explanation}</em></span>`;
+        }
+        
         userAnswers[currentIndex] = selectedOption; 
     }
+    
     flashcard.classList.add('is-flipped');
 }
 
