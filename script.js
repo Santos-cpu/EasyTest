@@ -1,106 +1,39 @@
-// Referencias de subida y flujo de pantallas
-const mainHeader = document.getElementById('main-header'); 
-const pdfInput = document.getElementById('pdf-input');
-const browseBtn = document.getElementById('browse-btn');
-const fileNameDisplay = document.getElementById('file-name');
-const continueBtn = document.getElementById('continue-btn');
-
-const uploadArea = document.getElementById('upload-area');
-const modeSelectionArea = document.getElementById('mode-selection-area');
-const studyArea = document.getElementById('study-area');
-
-// NUEVOS BOTONES DE NAVEGACIÓN GLOBAL
-const btnBackUpload = document.getElementById('btn-back-upload');
-const btnExitTest = document.getElementById('btn-exit-test');
-
-// Referencias de Modos
-const modeEstudioBtn = document.getElementById('mode-estudio-btn');
-const modePuntuacionBtn = document.getElementById('mode-puntuacion-btn');
-const modeExamenBtn = document.getElementById('mode-examen-btn');
-const modeHardcoreBtn = document.getElementById('mode-hardcore-btn');
-
-// Referencias de la zona de estudio
-const flashcard = document.getElementById('flashcard');
-const cardBack = document.querySelector('.card-back');
-const questionCounter = document.getElementById('question-counter');
-const questionText = document.getElementById('question-text');
-const optionsContainer = document.getElementById('options-container');
-const feedbackTitle = document.getElementById('feedback-title');
-const feedbackMessage = document.getElementById('feedback-message');
-const scoreCorrectDisplay = document.getElementById('score-correct');
-const scoreIncorrectDisplay = document.getElementById('score-incorrect');
-
-// Referencias Navegación Inferior
-const btnPrev = document.getElementById('btn-prev');
-const btnNext = document.getElementById('btn-next');
-
-// Referencias Resultados Finales
-const resultsArea = document.getElementById('results-area');
-const finalCorrect = document.getElementById('final-correct');
-const finalIncorrect = document.getElementById('final-incorrect');
-const mistakesReview = document.getElementById('mistakes-review'); 
-const btnRestartMode = document.getElementById('btn-restart-mode');
-const btnNewPdf = document.getElementById('btn-new-pdf');
-
-// Datos de prueba (Luego los borraremos cuando Python extraiga las reales)
-const mockQuestions = [
-    { 
-        question: "¿Cuál es la capital de Francia?", 
-        options: ["Madrid", "París", "Roma", "Berlín"], 
-        correctAnswer: "París" 
-    },
-    { 
-        question: "¿En qué año llegó el hombre a la luna?", 
-        options: ["1969", "1959", "1989"], 
-        correctAnswer: "1969" 
-    },
-    { 
-        question: "¿Cuál es el lenguaje estándar para estilizar páginas web?", 
-        options: ["HTML", "Python", "CSS", "JavaScript"], 
-        correctAnswer: "CSS" 
-    }
-];
-
+// ==========================================
+// CONFIGURACIÓN Y ESTADO GLOBAL
+// ==========================================
+let mockQuestions = []; // Se llenará con la respuesta del servidor
 let currentIndex = 0;
 let correctCount = 0;
 let incorrectCount = 0;
-let userAnswers = new Array(mockQuestions.length).fill(null);
-let currentMode = 'estudio'; 
+let userAnswers = [];
+let currentMode = '';
 
-// --- LÓGICA DE NAVEGACIÓN ENTRE PANTALLAS ---
+// Elementos del DOM
+const uploadArea = document.getElementById('upload-area');
+const fileInput = document.getElementById('file-input');
+const continueBtn = document.getElementById('continue-btn');
+const modeSelectionArea = document.getElementById('mode-selection');
+const flashcardArea = document.getElementById('flashcard-area');
+const resultsArea = document.getElementById('results-area');
 
-// 1. Subida
-browseBtn.addEventListener('click', () => pdfInput.click());
-
-pdfInput.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (file && file.type === "application/pdf") {
-        fileNameDisplay.textContent = `Archivo seleccionado: ${file.name}`;
-        fileNameDisplay.style.color = "#ecf0f1"; 
-        continueBtn.style.display = "block";
-    } else {
-        fileNameDisplay.textContent = "Por favor, selecciona un PDF válido.";
-        fileNameDisplay.style.color = "#e74c3c";
-        continueBtn.style.display = "none";
-    }
-});
-
-// --- NUEVA CONEXIÓN AL BACKEND (PYTHON) ---
+// ==========================================
+// LÓGICA DE SUBIDA (FETCH AL BACKEND)
+// ==========================================
 continueBtn.addEventListener('click', async () => {
-    const file = pdfInput.files[0];
-    if (!file) return;
+    const file = fileInput.files[0];
+    if (!file) {
+        alert("Por favor, selecciona un PDF primero.");
+        return;
+    }
 
-    // Cambiamos el texto para dar feedback al usuario
-    const originalText = continueBtn.textContent;
-    continueBtn.textContent = "Analizando PDF... ⏳";
-    continueBtn.disabled = true;
-
-    // Preparamos el archivo para enviarlo
     const formData = new FormData();
     formData.append('file', file);
 
+    // Feedback visual
+    continueBtn.disabled = true;
+    continueBtn.textContent = "Analizando PDF... ⏳";
+
     try {
-        // Enviamos el PDF a nuestro script de Python
         const response = await fetch('/api/process_pdf', {
             method: 'POST',
             body: formData
@@ -108,186 +41,116 @@ continueBtn.addEventListener('click', async () => {
 
         const data = await response.json();
 
-        if (response.ok) {
-            // Si Python responde con éxito
-            console.log("Respuesta de Python:", data);
-            alert(`¡Éxito! Python ha leído el PDF.\nNombre: ${data.filename}\nPáginas: ${data.pages_counted}`);
+        if (response.ok && data.questions && data.questions.length > 0) {
+            // Limpiamos y llenamos el array con preguntas reales
+            mockQuestions = data.questions;
             
-            // Pasamos a la siguiente pantalla
+            // Inicializamos el estado del juego
+            currentIndex = 0;
+            correctCount = 0;
+            incorrectCount = 0;
+            userAnswers = new Array(mockQuestions.length).fill(null);
+
+            alert(`¡Éxito! Hemos extraído ${mockQuestions.length} preguntas.`);
+            
+            // Cambiamos de pantalla
             uploadArea.style.display = 'none';
             modeSelectionArea.style.display = 'block';
         } else {
-            // Si Python devuelve un error (ej. archivo corrupto)
-            alert("Error desde el servidor: " + data.error);
+            alert(data.error || "No se encontraron preguntas legibles en el PDF. Intenta con otro formato.");
+            continueBtn.disabled = false;
+            continueBtn.textContent = "Continuar ➔";
         }
     } catch (error) {
-        // Si hay error de conexión
-        console.error("Error de red:", error);
-        alert("No se pudo conectar con Python. Probablemente estás abriendo el archivo localmente y el servidor no está encendido.");
-        
-        // SOLO PARA PRUEBAS: Permitimos avanzar aunque falle la conexión para que no te quedes bloqueado
-        uploadArea.style.display = 'none';
-        modeSelectionArea.style.display = 'block';
-    } finally {
-        // Restauramos el botón a su estado original
-        continueBtn.textContent = originalText;
+        console.error("Error:", error);
+        alert("Hubo un error de conexión con el servidor.");
         continueBtn.disabled = false;
+        continueBtn.textContent = "Continuar ➔";
     }
 });
 
-// 2. Volver a subida desde selector de modo
-btnBackUpload.addEventListener('click', () => {
-    modeSelectionArea.style.display = 'none';
-    uploadArea.style.display = 'block';
+// ==========================================
+// SELECCIÓN DE MODO
+// ==========================================
+document.querySelectorAll('.mode-card').forEach(card => {
+    card.addEventListener('click', () => {
+        currentMode = card.dataset.mode;
+        modeSelectionArea.style.display = 'none';
+        flashcardArea.style.display = 'block';
+        renderCard();
+    });
 });
 
-// 3. Salir del test y volver al selector (Función unificada)
-function exitToModeSelection() {
-    studyArea.style.display = 'none';
-    resultsArea.style.display = 'none';
-    modeSelectionArea.style.display = 'block';
-    mainHeader.style.display = 'block'; 
+// ==========================================
+// RENDERIZADO DE FLASHCARDS
+// ==========================================
+function renderCard() {
+    const question = mockQuestions[currentIndex];
+    const container = document.getElementById('card-container');
     
-    // Resetear variables del test
-    currentIndex = 0;
-    correctCount = 0;
-    incorrectCount = 0;
-    userAnswers = new Array(mockQuestions.length).fill(null);
-    currentMode = 'estudio';
-    
-    // Resetear marcadores
-    scoreCorrectDisplay.textContent = '0';
-    scoreIncorrectDisplay.textContent = '0';
+    // Actualizar progreso
+    document.getElementById('current-number').textContent = currentIndex + 1;
+    document.getElementById('total-number').textContent = mockQuestions.length;
+
+    // Limpiar contenedor
+    container.innerHTML = `
+        <div class="flashcard" id="main-card">
+            <div class="card-inner">
+                <div class="card-front">
+                    <p class="question-text">${question.question}</p>
+                    <div class="options-grid">
+                        ${question.options.map((opt, i) => `
+                            <button class="option-btn" onclick="checkAnswer('${opt.replace(/'/g, "\\'")}')">${opt}</button>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="card-back">
+                    <h3>Respuesta Correcta</h3>
+                    <p>${question.correctAnswer}</p>
+                    <button class="next-btn" onclick="nextCard()">Siguiente Pregunta ➔</button>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
-btnExitTest.addEventListener('click', exitToModeSelection);
-btnRestartMode.addEventListener('click', exitToModeSelection);
+function checkAnswer(selectedOption) {
+    const card = document.getElementById('main-card');
+    const correct = mockQuestions[currentIndex].correctAnswer;
 
-btnNewPdf.addEventListener('click', () => {
-    location.reload();
-});
-
-// --- ENRUTADOR DE MODOS ---
-function startMode(selectedMode) {
-    currentMode = selectedMode;
-    modeSelectionArea.style.display = 'none';
-    mainHeader.style.display = 'none'; 
-    studyArea.style.display = 'block';
-
-    if (currentMode !== 'estudio') {
-        alert(`¡Has seleccionado el Modo ${currentMode.toUpperCase()}!\n\nLa interfaz visual está lista. Más adelante programaremos la lógica específica en JavaScript.\n\nPor ahora, funcionará con la lógica del Modo Estudio.`);
-    }
-
-    loadQuestion();
-}
-
-modeEstudioBtn.addEventListener('click', () => startMode('estudio'));
-modePuntuacionBtn.addEventListener('click', () => startMode('puntuacion'));
-modeExamenBtn.addEventListener('click', () => startMode('examen'));
-modeHardcoreBtn.addEventListener('click', () => startMode('hardcore'));
-
-// --- LÓGICA DE ESTUDIO ---
-function loadQuestion() {
-    flashcard.classList.remove('is-flipped');
-    cardBack.classList.remove('is-incorrect');
-    
-    btnPrev.disabled = (currentIndex === 0);
-    
-    if (currentIndex < mockQuestions.length) {
-        const currentQ = mockQuestions[currentIndex];
-        questionCounter.textContent = `(${currentIndex + 1}/${mockQuestions.length})`;
-        questionText.textContent = currentQ.question;
-        
-        optionsContainer.innerHTML = '';
-        
-        currentQ.options.forEach(option => {
-            const btn = document.createElement('button');
-            btn.classList.add('option-btn');
-            btn.textContent = option;
-            
-            btn.addEventListener('click', () => {
-                checkAnswer(option, currentQ.correctAnswer, btn);
-            });
-            
-            optionsContainer.appendChild(btn);
-        });
-        
+    if (selectedOption === correct) {
+        correctCount++;
     } else {
-        studyArea.style.display = 'none';
-        resultsArea.style.display = 'flex';
-        finalCorrect.textContent = correctCount;
-        finalIncorrect.textContent = incorrectCount;
-        
-        mistakesReview.innerHTML = '';
-        
-        if (incorrectCount > 0) {
-            mistakesReview.innerHTML = '<h3 style="color: #aaa; margin-bottom: 15px; font-size: 18px;">Repaso de errores:</h3>';
-            
-            mockQuestions.forEach((q, index) => {
-                const answer = userAnswers[index];
-                
-                if (answer !== null && answer !== q.correctAnswer) {
-                    const mistakeDiv = document.createElement('div');
-                    mistakeDiv.classList.add('mistake-item');
-                    mistakeDiv.innerHTML = `
-                        <p class="mistake-question">${index + 1}. ${q.question}</p>
-                        <p class="mistake-answer mistake-wrong">❌ Tu respuesta: ${answer}</p>
-                        <p class="mistake-answer mistake-correct">✅ Correcta: ${q.correctAnswer}</p>
-                    `;
-                    mistakesReview.appendChild(mistakeDiv);
-                }
-            });
-        } else {
-            mistakesReview.innerHTML = '<p style="color: #2ecc71; font-size: 18px; font-weight: bold; margin: 20px 0; text-align: center;">¡Perfecto! No has tenido ningún fallo. 🥇</p>';
-        }
+        incorrectCount++;
     }
+
+    // Girar la carta para mostrar la respuesta
+    card.classList.add('is-flipped');
 }
 
-function checkAnswer(selectedOption, correctAnswer, clickedBtn) {
-    if (userAnswers[currentIndex] === null) {
-        if (selectedOption === correctAnswer) {
-            correctCount++;
-            scoreCorrectDisplay.textContent = correctCount;
-            feedbackTitle.textContent = "¡Correcto! ✅";
-            feedbackTitle.style.color = "#2ecc71"; 
-            feedbackMessage.textContent = "¡Muy bien hecho!";
-            clickedBtn.classList.add('selected-correct');
-        } else {
-            incorrectCount++;
-            scoreIncorrectDisplay.textContent = incorrectCount;
-            feedbackTitle.textContent = "Incorrecto ❌";
-            feedbackTitle.style.color = "#e74c3c";
-            feedbackMessage.textContent = `La respuesta correcta era: ${correctAnswer}`;
-            cardBack.classList.add('is-incorrect');
-            clickedBtn.classList.add('selected-incorrect');
-        }
-        
-        userAnswers[currentIndex] = selectedOption; 
-    } else {
-        if (selectedOption === correctAnswer) {
-            feedbackTitle.textContent = "¡Correcto! ✅ (Ya puntuada)";
-            feedbackTitle.style.color = "#2ecc71"; 
-            feedbackMessage.textContent = "¡Muy bien hecho!";
-            cardBack.classList.remove('is-incorrect');
-        } else {
-            feedbackTitle.textContent = "Incorrecto ❌ (Ya puntuada)";
-            feedbackTitle.style.color = "#e74c3c";
-            feedbackMessage.textContent = `La respuesta correcta era: ${correctAnswer}`;
-            cardBack.classList.add('is-incorrect');
-        }
-    }
-    
-    flashcard.classList.add('is-flipped');
-}
-
-btnNext.addEventListener('click', () => {
+function nextCard() {
     currentIndex++;
-    loadQuestion();
-});
-
-btnPrev.addEventListener('click', () => {
-    if (currentIndex > 0) {
-        currentIndex--;
-        loadQuestion();
+    if (currentIndex < mockQuestions.length) {
+        renderCard();
+    } else {
+        showResults();
     }
-});
+}
+
+// ==========================================
+// PANTALLA DE RESULTADOS
+// ==========================================
+function showResults() {
+    flashcardArea.style.display = 'none';
+    resultsArea.style.display = 'block';
+
+    document.getElementById('correct-res').textContent = correctCount;
+    document.getElementById('incorrect-res').textContent = incorrectCount;
+    
+    const accuracy = Math.round((correctCount / mockQuestions.length) * 100);
+    document.getElementById('accuracy-res').textContent = accuracy + "%";
+}
+
+function restartApp() {
+    location.reload();
+}
