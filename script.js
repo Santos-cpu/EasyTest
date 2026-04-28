@@ -42,124 +42,142 @@ let currentMode = 'estudio';
 // ==========================================
 // FLUJO DE SUBIDA Y PYTHON
 // ==========================================
-browseBtn.onclick = () => pdfInput.click();
+if (browseBtn) browseBtn.addEventListener('click', () => pdfInput.click());
 
-pdfInput.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === "application/pdf") {
-        fileNameDisplay.textContent = `Archivo seleccionado: ${file.name}`;
-        fileNameDisplay.style.color = "#ecf0f1"; 
-        continueBtn.style.display = "block";
-    }
-};
-
-continueBtn.onclick = async () => {
-    const file = pdfInput.files[0];
-    if (!file) return;
-
-    continueBtn.textContent = "Analizando PDF... ⏳";
-    continueBtn.disabled = true;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-        const response = await fetch('/api/process_pdf', { method: 'POST', body: formData });
-        const data = await response.json();
-
-        if (response.ok && data.questions && data.questions.length > 0) {
-            mockQuestions = data.questions;
-            userAnswers = new Array(mockQuestions.length).fill(null);
-            uploadArea.style.display = 'none';
-            modeSelectionArea.style.display = 'block';
-        } else {
-            alert(data.error || "No se detectaron preguntas.");
+if (pdfInput) {
+    pdfInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file && file.type === "application/pdf") {
+            fileNameDisplay.textContent = `Archivo seleccionado: ${file.name}`;
+            fileNameDisplay.style.color = "#ecf0f1"; 
+            continueBtn.style.display = "block";
         }
-    } catch (error) {
-        alert("Error de conexión con el servidor.");
-    } finally {
-        continueBtn.textContent = "Continuar ➔";
-        continueBtn.disabled = false;
-    }
-};
+    });
+}
+
+if (continueBtn) {
+    continueBtn.addEventListener('click', async () => {
+        const file = pdfInput.files[0];
+        if (!file) return;
+
+        continueBtn.textContent = "Analizando PDF... ⏳";
+        continueBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/process_pdf', { method: 'POST', body: formData });
+            const data = await response.json();
+
+            if (response.ok && data.questions && data.questions.length > 0) {
+                mockQuestions = data.questions;
+                userAnswers = new Array(mockQuestions.length).fill(null);
+                uploadArea.style.display = 'none';
+                modeSelectionArea.style.display = 'block';
+            } else {
+                alert(data.error || "No se detectaron preguntas.");
+            }
+        } catch (error) {
+            alert("Error de conexión con el servidor.");
+        } finally {
+            continueBtn.textContent = "Continuar ➔";
+            continueBtn.disabled = false;
+        }
+    });
+}
 
 // ==========================================
 // NAVEGACIÓN DE PANTALLAS
 // ==========================================
-btnBackUpload.onclick = () => {
-    modeSelectionArea.style.display = 'none';
-    uploadArea.style.display = 'block';
-};
+if (btnBackUpload) {
+    btnBackUpload.addEventListener('click', () => {
+        modeSelectionArea.style.display = 'none';
+        uploadArea.style.display = 'block';
+    });
+}
 
 function exitToModeSelection() {
     studyArea.style.display = 'none';
     resultsArea.style.display = 'none';
     modeSelectionArea.style.display = 'block';
-    mainHeader.style.display = 'block'; 
+    if(mainHeader) mainHeader.style.display = 'block'; 
     currentIndex = 0;
     correctCount = 0;
     incorrectCount = 0;
     userAnswers = new Array(mockQuestions.length).fill(null);
-    scoreCorrectDisplay.textContent = '0';
-    scoreIncorrectDisplay.textContent = '0';
+    if(scoreCorrectDisplay) scoreCorrectDisplay.textContent = '0';
+    if(scoreIncorrectDisplay) scoreIncorrectDisplay.textContent = '0';
 }
 
-btnExitTest.onclick = exitToModeSelection;
-btnRestartMode.onclick = exitToModeSelection;
-btnNewPdf.onclick = () => location.reload();
+if(btnExitTest) btnExitTest.addEventListener('click', exitToModeSelection);
+if(btnRestartMode) btnRestartMode.addEventListener('click', exitToModeSelection);
+if(btnNewPdf) btnNewPdf.addEventListener('click', () => location.reload());
 
-document.getElementById('mode-estudio-btn').onclick = () => startMode('estudio');
-document.getElementById('mode-puntuacion-btn').onclick = () => startMode('puntuacion');
-document.getElementById('mode-examen-btn').onclick = () => startMode('examen');
-document.getElementById('mode-hardcore-btn').onclick = () => startMode('hardcore');
+// ACTIVACIÓN DE MODOS
+const modeEstudioBtn = document.getElementById('mode-estudio-btn');
+const modePuntuacionBtn = document.getElementById('mode-puntuacion-btn');
+const modeExamenBtn = document.getElementById('mode-examen-btn');
+const modeHardcoreBtn = document.getElementById('mode-hardcore-btn');
+
+if(modeEstudioBtn) modeEstudioBtn.addEventListener('click', () => startMode('estudio'));
+if(modePuntuacionBtn) modePuntuacionBtn.addEventListener('click', () => startMode('puntuacion'));
+if(modeExamenBtn) modeExamenBtn.addEventListener('click', () => startMode('examen'));
+if(modeHardcoreBtn) modeHardcoreBtn.addEventListener('click', () => startMode('hardcore'));
 
 function startMode(selectedMode) {
+    if(mockQuestions.length === 0) {
+        alert("No hay preguntas cargadas. Sube un PDF primero.");
+        return;
+    }
     currentMode = selectedMode;
     modeSelectionArea.style.display = 'none';
-    mainHeader.style.display = 'none'; 
+    if(mainHeader) mainHeader.style.display = 'none'; 
     studyArea.style.display = 'block';
     loadQuestion();
 }
 
 // ==========================================
-// LÓGICA DE JUEGO (NUEVO DISEÑO PLANO)
+// LÓGICA DE JUEGO
 // ==========================================
 function loadQuestion() {
-    // 1. Ocultar el feedback al cargar una pregunta nueva
+    // ASEGURAMOS QUE LA EXPLICACIÓN SE OCULTE AL CARGAR LA PREGUNTA
     const feedbackContainer = document.getElementById('feedback-container');
-    feedbackContainer.style.display = 'none';
-    feedbackContainer.innerHTML = '';
+    if (feedbackContainer) {
+        feedbackContainer.style.display = 'none';
+        feedbackContainer.innerHTML = '';
+    }
     
-    btnPrev.disabled = (currentIndex === 0);
+    if(btnPrev) btnPrev.disabled = (currentIndex === 0);
     
     if (currentIndex < mockQuestions.length) {
         const currentQ = mockQuestions[currentIndex];
-        questionCounter.textContent = `${currentIndex + 1} / ${mockQuestions.length}`;
-        questionText.textContent = currentQ.question;
+        if(questionCounter) questionCounter.textContent = `${currentIndex + 1} / ${mockQuestions.length}`;
+        if(questionText) questionText.textContent = currentQ.question;
         
-        optionsContainer.innerHTML = '';
-        
-        currentQ.options.forEach(option => {
-            const btn = document.createElement('button');
-            btn.classList.add('option-btn');
-            btn.textContent = option;
+        if(optionsContainer) {
+            optionsContainer.innerHTML = '';
             
-            // Si la pregunta ya fue respondida antes, restauramos el estado visual
-            if (userAnswers[currentIndex] !== null) {
-                btn.disabled = true; // Bloqueamos los botones
+            currentQ.options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
                 
-                if (option === currentQ.correctAnswer) {
-                    btn.classList.add('correct-answer'); // La correcta siempre en verde
-                } else if (option === userAnswers[currentIndex]) {
-                    btn.classList.add('wrong-answer'); // Si falló, la suya en rojo
+                if (userAnswers[currentIndex] !== null) {
+                    btn.disabled = true; 
+                    if (option === currentQ.correctAnswer) {
+                        btn.classList.add('correct-answer'); 
+                    } else if (option === userAnswers[currentIndex]) {
+                        btn.classList.add('wrong-answer'); 
+                    }
+                } else {
+                    btn.addEventListener('click', () => checkAnswer(option, currentQ.correctAnswer, btn));
                 }
-            } else {
-                btn.onclick = () => checkAnswer(option, currentQ.correctAnswer, btn);
-            }
-            optionsContainer.appendChild(btn);
-        });
+                optionsContainer.appendChild(btn);
+            });
+        }
         
-        // Si ya está respondida, mostramos la explicación directamente
+        // Solo la mostramos si la pregunta YA estaba respondida de antes
         if (userAnswers[currentIndex] !== null) {
             showExplanation(currentQ);
         }
@@ -173,21 +191,18 @@ function checkAnswer(selectedOption, correctAnswer, clickedBtn) {
     if (userAnswers[currentIndex] === null) {
         const currentQ = mockQuestions[currentIndex];
         
-        // 1. Bloqueamos todas las opciones para que no pueda pulsar otra vez
         const allBtns = optionsContainer.querySelectorAll('.option-btn');
         allBtns.forEach(btn => btn.disabled = true);
         
-        // 2. Evaluamos acierto o fallo
         if (selectedOption === correctAnswer) {
             correctCount++;
-            scoreCorrectDisplay.textContent = correctCount;
-            clickedBtn.classList.add('correct-answer'); // Se ilumina verde
+            if(scoreCorrectDisplay) scoreCorrectDisplay.textContent = correctCount;
+            clickedBtn.classList.add('correct-answer'); 
         } else {
             incorrectCount++;
-            scoreIncorrectDisplay.textContent = incorrectCount;
-            clickedBtn.classList.add('wrong-answer'); // Su fallo en rojo
+            if(scoreIncorrectDisplay) scoreIncorrectDisplay.textContent = incorrectCount;
+            clickedBtn.classList.add('wrong-answer'); 
             
-            // Buscamos cuál era la verdadera y la iluminamos en verde
             allBtns.forEach(btn => {
                 if (btn.textContent === correctAnswer) {
                     btn.classList.add('correct-answer');
@@ -197,17 +212,17 @@ function checkAnswer(selectedOption, correctAnswer, clickedBtn) {
         
         userAnswers[currentIndex] = selectedOption; 
         
-        // 3. Mostramos la caja inferior
+        // Mostrar explicación al contestar
         showExplanation(currentQ);
     }
 }
 
-// Función auxiliar que inyecta la caja de explicación
 function showExplanation(questionData) {
     const container = document.getElementById('feedback-container');
-    container.style.display = 'block';
+    if(!container) return;
     
-    // Si Python encontró explicación la usamos, si no, damos un texto por defecto
+    container.style.display = 'block'; // AQUÍ SE REVELA LA CAJA
+    
     let explanationText = questionData.explanation 
         ? questionData.explanation 
         : "No hay una explicación adicional para esta pregunta en el PDF.";
@@ -226,40 +241,46 @@ function showExplanation(questionData) {
     `;
 }
 
-btnNext.onclick = () => {
-    currentIndex++;
-    loadQuestion();
-};
-
-btnPrev.onclick = () => {
-    if (currentIndex > 0) {
-        currentIndex--;
+if(btnNext) {
+    btnNext.addEventListener('click', () => {
+        currentIndex++;
         loadQuestion();
-    }
-};
+    });
+}
+
+if(btnPrev) {
+    btnPrev.addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            loadQuestion();
+        }
+    });
+}
 
 function showResults() {
     studyArea.style.display = 'none';
     resultsArea.style.display = 'flex';
-    finalCorrect.textContent = correctCount;
-    finalIncorrect.textContent = incorrectCount;
+    if(finalCorrect) finalCorrect.textContent = correctCount;
+    if(finalIncorrect) finalIncorrect.textContent = incorrectCount;
     
-    mistakesReview.innerHTML = '';
-    
-    if (incorrectCount > 0) {
-        mistakesReview.innerHTML = `<h3 style="color:#aaa;margin-bottom:15px;">Repaso de errores:</h3>`;
-        mockQuestions.forEach((q, i) => {
-            if (userAnswers[i] !== q.correctAnswer) {
-                const div = document.createElement('div');
-                div.className = 'mistake-item';
-                div.innerHTML = `
-                    <p class="mistake-question">${i + 1}. ${q.question}</p>
-                    <p class="mistake-wrong">❌ Tu respuesta: ${userAnswers[i] || 'Sin responder'}</p>
-                    <p class="mistake-correct">✅ Correcta: ${q.correctAnswer}</p>`;
-                mistakesReview.appendChild(div);
-            }
-        });
-    } else {
-        mistakesReview.innerHTML = '<p style="color:#2ecc71;font-weight:bold;text-align:center;">¡Puntuación perfecta! 🥇</p>';
+    if(mistakesReview) {
+        mistakesReview.innerHTML = '';
+        
+        if (incorrectCount > 0) {
+            mistakesReview.innerHTML = '<h3 style="color:#aaa;margin-bottom:15px;">Repaso de errores:</h3>';
+            mockQuestions.forEach((q, i) => {
+                if (userAnswers[i] !== q.correctAnswer) {
+                    const div = document.createElement('div');
+                    div.className = 'mistake-item';
+                    div.innerHTML = `
+                        <p class="mistake-question">${i + 1}. ${q.question}</p>
+                        <p class="mistake-wrong">❌ Tu respuesta: ${userAnswers[i] || 'Sin responder'}</p>
+                        <p class="mistake-correct">✅ Correcta: ${q.correctAnswer}</p>`;
+                    mistakesReview.appendChild(div);
+                }
+            });
+        } else {
+            mistakesReview.innerHTML = '<p style="color:#2ecc71;font-weight:bold;text-align:center;">¡Puntuación perfecta! 🥇</p>';
+        }
     }
 }
