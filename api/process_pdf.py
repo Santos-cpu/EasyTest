@@ -33,7 +33,7 @@ def extract_questions_from_text(text):
             # Por ahora, como no sabemos la correcta, marcamos la primera como placeholder
             # En la siguiente fase usaremos IA para detectar la correcta de verdad
             questions.append({
-                "question": f"{q_number}. {pregunta_texto}",
+                "question": pregunta_texto,
                 "options": lista_opciones,
                 "correctAnswer": lista_opciones[0] if lista_opciones else ""
             })
