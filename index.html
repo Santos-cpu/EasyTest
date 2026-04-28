@@ -3,75 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyTest - Study Smarter</title>
+    <title>EasyTest | Tarjetas de Estudio</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
-
     <div class="container">
-        <section id="upload-area">
-            <h1 class="hero-title">EasyTest</h1>
-            <p class="hero-subtitle">Sube tu PDF y genera tarjetas de estudio al instante.</p>
-            <div class="upload-card">
-                <input type="file" id="file-input" style="display: none;" accept="application/pdf" onchange="updateFileName()">
-                <button class="btn-secondary" onclick="document.getElementById('file-input').click()">Seleccionar PDF</button>
-                <p id="file-name-display"></p>
-                <button id="continue-btn" class="btn-primary">Continuar ➔</button>
-            </div>
-        </section>
+        <header id="main-header">
+            <h1>📚 EasyTest</h1>
+            <p>Sube tu PDF con preguntas tipo test y genera tus tarjetas de estudio interactivas.</p>
+        </header>
 
-        <section id="mode-selection" style="display: none;">
-            <h2 class="section-title">Elige un modo</h2>
-            <div class="mode-grid">
-                <div class="mode-item" data-mode="estudio">
-                    <h3>Modo Estudio</h3>
-                    <p>Repasa a tu ritmo sin presión.</p>
+        <main>
+            <div id="upload-area">
+                <div class="upload-section">
+                    <input type="file" id="pdf-input" accept="application/pdf">
+                    <button id="browse-btn" class="primary-btn">Seleccionar Archivo PDF</button>
+                    <p id="file-name" class="file-name-text">Ningún archivo seleccionado</p>
                 </div>
-                <div class="mode-item" data-mode="puntuacion">
-                    <h3>Puntuación</h3>
-                    <p>Compite contra ti mismo.</p>
-                </div>
-                <div class="mode-item" data-mode="examen">
-                    <h3>Examen</h3>
-                    <p>Simulacro de 30 preguntas.</p>
-                </div>
-                <div class="mode-item" data-mode="hardcore">
-                    <h3>Hardcore</h3>
-                    <p>Los fallos restan puntos.</p>
-                </div>
+                <button id="continue-btn" class="success-btn" style="display: none;">Continuar ➔</button>
             </div>
-            <button class="btn-text" onclick="restartApp()">⬅ Cancelar y salir</button>
-        </section>
 
-        <section id="flashcard-area" style="display: none;">
-            <div class="nav-controls">
-                <button class="btn-small" onclick="backToModes()">⬅ Volver</button>
-                <div class="progress-info">Pregunta <span id="current-number">1</span>/<span id="total-number">50</span></div>
-                <button class="btn-small" onclick="restartApp()">Salir ✖</button>
-            </div>
-            
-            <div id="card-container">
+            <div id="mode-selection-area" style="display: none;">
+                
+                <button id="btn-back-upload" class="icon-btn btn-top-left">⬅️ Volver</button>
+                
+                <h2 style="color: #ffffff; margin-bottom: 20px;">Elige un modo de juego</h2>
+                
+                <div class="modes-container">
+                    <div class="mode-card" id="mode-estudio-btn">
+                        <h3>🧠 Modo Estudio</h3>
+                        <p>Falla o acierta, la tarjeta se voltea al instante para enseñarte la respuesta. Ideal para asimilar conceptos.</p>
+                    </div>
+                    <div class="mode-card" id="mode-puntuacion-btn">
+                        <h3>🎯 Modo Puntuación</h3>
+                        <p>Responde a tu ritmo. Las respuestas correctas e incorrectas se revelarán solo al finalizar el test.</p>
+                    </div>
+                    <div class="mode-card" id="mode-examen-btn">
+                        <h3>⏱️ Modo Examen</h3>
+                        <p>Simulacro real: 30 preguntas seleccionadas al azar de tu PDF. Resultados ocultos hasta el final.</p>
+                    </div>
+                    <div class="mode-card" id="mode-hardcore-btn">
+                        <h3>🔥 Modo Hardcore</h3>
+                        <p>Solo para valientes. 30 preguntas al azar donde cada 2 fallos te restan 1 acierto. ¡Cuidado!</p>
+                    </div>
                 </div>
-        </section>
+            </div>
 
-        <section id="results-area" style="display: none;">
-            <h2 class="section-title">¡Test Completado!</h2>
-            <div class="results-grid">
-                <div class="res-box">
-                    <span id="correct-res">0</span>
-                    <label>Aciertos</label>
+            <div id="study-area" style="display: none;">
+                
+                <button id="btn-exit-test" class="icon-btn exit-btn btn-top-right" title="Salir del test">✖️ Salir</button>
+                
+                <div class="score-board">
+                    <span class="correct">Aciertos: <strong id="score-correct">0</strong></span>
+                    <span class="incorrect">Errores: <strong id="score-incorrect">0</strong></span>
                 </div>
-                <div class="res-box">
-                    <span id="incorrect-res">0</span>
-                    <label>Fallos</label>
+
+                <div class="flashcard-container" id="flashcard-container">
+                    <div class="flashcard" id="flashcard">
+                        <div class="card-face card-front">
+                            <h3>Pregunta <span id="question-counter"></span></h3>
+                            <p id="question-text">¿Cargando pregunta...?</p>
+                            <div id="options-container" class="options-container"></div>
+                        </div>
+                        
+                        <div class="card-face card-back">
+                            <h3 id="feedback-title">Resultado</h3>
+                            <p id="feedback-message">...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bottom-nav" id="bottom-nav">
+                    <button id="btn-prev" class="nav-btn">⬅️ Anterior</button>
+                    <button id="btn-next" class="nav-btn primary-btn">Siguiente ➡️</button>
                 </div>
             </div>
-            <div class="accuracy-container">
-                <p>Precisión: <span id="accuracy-res">0%</span></p>
+
+            <div id="results-area" style="display: none;" class="results-container">
+                <div class="results-card">
+                    <h2>¡Terminaste! 🎉</h2>
+                    <div class="results-scores">
+                        <p>Aciertos: <span id="final-correct" class="correct-text">0</span></p>
+                        <p>Errores: <span id="final-incorrect" class="incorrect-text">0</span></p>
+                    </div>
+                    <div id="mistakes-review" class="mistakes-container"></div>
+                </div>
+
+                <div class="results-actions">
+                    <button id="btn-restart-mode" class="primary-btn">Elegir otro modo con este PDF</button>
+                    <button id="btn-new-pdf" class="secondary-btn">Subir un PDF nuevo</button>
+                </div>
             </div>
-            <button class="btn-primary" onclick="restartApp()">Hacer otro test</button>
-        </section>
+        </main>
     </div>
 
     <script src="script.js"></script>
