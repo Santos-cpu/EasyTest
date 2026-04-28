@@ -6,27 +6,40 @@ app = Flask(__name__)
 
 def extract_questions(text):
     questions = []
-    # Buscamos patrones de "Número. Pregunta"
+    # Segmentar por números de pregunta
     raw_blocks = re.split(r'\n(\d+[\.\)])', text)
     
     for i in range(1, len(raw_blocks), 2):
         q_number = raw_blocks[i]
         q_content = raw_blocks[i+1] if i+1 < len(raw_blocks) else ""
         
-        # Separamos las opciones A, B, C, D
+        # Segmentar por opciones (a, b, c, d)
         options = re.split(r'\n([a-dA-D][\.\)])', q_content)
         
         if len(options) > 1:
             pregunta_texto = options[0].strip()
             lista_opciones = []
+            explicacion = ""
+            
             for j in range(1, len(options), 2):
                 opt_label = options[j]
                 opt_text = options[j+1].strip() if j+1 < len(options) else ""
-                # Limpiamos posibles marcas de respuesta del texto
+                
+                # 🔴 NUEVO: Buscar si existe la palabra "Explicación:" dentro de la opción
+                # El (?i) lo hace insensible a mayúsculas/minúsculas
+                exp_match = re.search(r'(?i)(explicaci[oó]n:)(.*)', opt_text, re.DOTALL)
+                
+                if exp_match:
+                    # Guardamos la explicación sin la palabra clave
+                    explicacion = exp_match.group(2).strip()
+                    # Recortamos la opción para quitar la explicación
+                    opt_text = opt_text[:exp_match.start()].strip()
+                
+                # Limpiar ticks
                 opt_clean = opt_text.replace('✓', '').replace('✔', '').strip()
                 lista_opciones.append(f"{opt_label} {opt_clean}")
             
-            # Buscamos cuál es la correcta (donde estuviera el tick originalmente)
+            # Buscar cuál era la correcta (donde estaba el tick)
             correct_idx = 0
             for idx, raw_opt in enumerate(options[2::2]):
                 if '✓' in raw_opt or '✔' in raw_opt:
@@ -36,7 +49,8 @@ def extract_questions(text):
             questions.append({
                 "question": pregunta_texto,
                 "options": lista_opciones,
-                "correctAnswer": lista_opciones[correct_idx] if lista_opciones else ""
+                "correctAnswer": lista_opciones[correct_idx] if lista_opciones else "",
+                "explanation": explicacion # 🔴 Pasamos la explicación a JS
             })
     return questions
 
