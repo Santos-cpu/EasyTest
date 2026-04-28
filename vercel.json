@@ -9,7 +9,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "api/process_pdf.py"
+      "dest": "api/process-pdf.py"
     }
   ]
 }
