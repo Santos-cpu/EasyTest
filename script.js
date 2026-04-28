@@ -182,11 +182,11 @@ function checkAnswer(selectedOption, correctAnswer, clickedBtn) {
             feedbackMessage.innerHTML = `La respuesta correcta era:<br><strong style="color:#ffffff; font-size:20px;">${correctAnswer}</strong>`;
         }
         
-        // 🔴 EXPLICACIÓN CON NUEVO DISEÑO (Más grande, blanco puro y sin cursiva)
+        // 🔴 DISEÑO MEJORADO: Una caja oscura translúcida para que el texto descanse la vista
         if (currentQ.explanation) {
             feedbackMessage.innerHTML += `
-                <div style="margin-top: 25px; padding-top: 25px; border-top: 1px solid #444; color: #ffffff; font-size: 19px; font-weight: 500; line-height: 1.6; text-align: center;">
-                    <span style="font-size: 24px; margin-bottom: 10px; display: block;">💡</span>
+                <div style="margin-top: 25px; padding: 20px; background: rgba(0, 0, 0, 0.25); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); color: #e2e8f0; font-size: 17px; font-weight: 500; line-height: 1.6; text-align: center;">
+                    <span style="font-size: 22px; margin-bottom: 8px; display: block;">💡</span>
                     ${currentQ.explanation}
                 </div>
             `;
@@ -194,7 +194,6 @@ function checkAnswer(selectedOption, correctAnswer, clickedBtn) {
         
         userAnswers[currentIndex] = selectedOption; 
     } else {
-        // Lógica por si el usuario vuelve a hacer clic en una opción de una carta ya respondida
         if (selectedOption === correctAnswer) {
             feedbackTitle.textContent = "¡Correcto! ✅ (Ya puntuada)";
             feedbackTitle.style.color = "#2ecc71"; 
@@ -207,11 +206,10 @@ function checkAnswer(selectedOption, correctAnswer, clickedBtn) {
             cardBack.classList.add('is-incorrect');
         }
         
-        // Volvemos a inyectar la explicación para que no desaparezca
         if (currentQ.explanation) {
             feedbackMessage.innerHTML += `
-                <div style="margin-top: 25px; padding-top: 25px; border-top: 1px solid #444; color: #ffffff; font-size: 19px; font-weight: 500; line-height: 1.6; text-align: center;">
-                    <span style="font-size: 24px; margin-bottom: 10px; display: block;">💡</span>
+                <div style="margin-top: 25px; padding: 20px; background: rgba(0, 0, 0, 0.25); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); color: #e2e8f0; font-size: 17px; font-weight: 500; line-height: 1.6; text-align: center;">
+                    <span style="font-size: 22px; margin-bottom: 8px; display: block;">💡</span>
                     ${currentQ.explanation}
                 </div>
             `;
