@@ -162,7 +162,7 @@ function loadQuestion() {
 }
 
 function checkAnswer(selectedOption, correctAnswer, clickedBtn) {
-    const currentQ = mockQuestions[currentIndex]; // Cogemos la pregunta actual para leer su explicación
+    const currentQ = mockQuestions[currentIndex];
     
     if (userAnswers[currentIndex] === null) {
         if (selectedOption === correctAnswer) {
@@ -179,15 +179,43 @@ function checkAnswer(selectedOption, correctAnswer, clickedBtn) {
             feedbackTitle.style.color = "#e74c3c";
             cardBack.classList.add('is-incorrect');
             clickedBtn.classList.add('selected-incorrect');
-            feedbackMessage.innerHTML = `La respuesta correcta era:<br><strong style="color:#fff;">${correctAnswer}</strong>`;
+            feedbackMessage.innerHTML = `La respuesta correcta era:<br><strong style="color:#ffffff; font-size:20px;">${correctAnswer}</strong>`;
         }
         
-        // 🔴 NUEVO: Si Python ha encontrado una explicación, la inyectamos abajo
+        // 🔴 EXPLICACIÓN CON NUEVO DISEÑO (Más grande, blanco puro y sin cursiva)
         if (currentQ.explanation) {
-            feedbackMessage.innerHTML += `<br><br><span style="display:block; margin-top:15px; padding-top:15px; border-top:1px solid #333; color:#aaa; font-size:15px; font-weight:normal; line-height:1.5;">💡 <em>${currentQ.explanation}</em></span>`;
+            feedbackMessage.innerHTML += `
+                <div style="margin-top: 25px; padding-top: 25px; border-top: 1px solid #444; color: #ffffff; font-size: 19px; font-weight: 500; line-height: 1.6; text-align: center;">
+                    <span style="font-size: 24px; margin-bottom: 10px; display: block;">💡</span>
+                    ${currentQ.explanation}
+                </div>
+            `;
         }
         
         userAnswers[currentIndex] = selectedOption; 
+    } else {
+        // Lógica por si el usuario vuelve a hacer clic en una opción de una carta ya respondida
+        if (selectedOption === correctAnswer) {
+            feedbackTitle.textContent = "¡Correcto! ✅ (Ya puntuada)";
+            feedbackTitle.style.color = "#2ecc71"; 
+            feedbackMessage.innerHTML = "¡Muy bien hecho!";
+            cardBack.classList.remove('is-incorrect');
+        } else {
+            feedbackTitle.textContent = "Incorrecto ❌ (Ya puntuada)";
+            feedbackTitle.style.color = "#e74c3c";
+            feedbackMessage.innerHTML = `La respuesta correcta era:<br><strong style="color:#ffffff; font-size:20px;">${correctAnswer}</strong>`;
+            cardBack.classList.add('is-incorrect');
+        }
+        
+        // Volvemos a inyectar la explicación para que no desaparezca
+        if (currentQ.explanation) {
+            feedbackMessage.innerHTML += `
+                <div style="margin-top: 25px; padding-top: 25px; border-top: 1px solid #444; color: #ffffff; font-size: 19px; font-weight: 500; line-height: 1.6; text-align: center;">
+                    <span style="font-size: 24px; margin-bottom: 10px; display: block;">💡</span>
+                    ${currentQ.explanation}
+                </div>
+            `;
+        }
     }
     
     flashcard.classList.add('is-flipped');
