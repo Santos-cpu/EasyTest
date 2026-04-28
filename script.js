@@ -1,150 +1,100 @@
-// ==========================================
-// ESTADO GLOBAL
-// ==========================================
-let mockQuestions = []; 
+let mockQuestions = [];
 let currentIndex = 0;
 let correctCount = 0;
 let incorrectCount = 0;
-let currentMode = '';
 
-// Elementos del DOM
-const uploadArea = document.getElementById('upload-area');
-const fileInput = document.getElementById('file-input');
-const continueBtn = document.getElementById('continue-btn');
-const fileNameDisplay = document.getElementById('file-name-display');
-const modeSelectionArea = document.getElementById('mode-selection');
-const flashcardArea = document.getElementById('flashcard-area');
-const resultsArea = document.getElementById('results-area');
+// Navegación
+function restartApp() { window.location.reload(); }
+function backToModes() {
+    document.getElementById('flashcard-area').style.display = 'none';
+    document.getElementById('mode-selection').style.display = 'block';
+}
 
-// ==========================================
-// 1. GESTIÓN DE ARCHIVOS
-// ==========================================
+function updateFileName() {
+    const file = document.getElementById('file-input').files[0];
+    if (file) document.getElementById('file-name-display').textContent = file.name;
+}
 
-// Muestra el nombre del archivo al seleccionarlo
-window.updateFileName = function() {
-    if (fileInput.files.length > 0) {
-        fileNameDisplay.textContent = "📄 " + fileInput.files[0].name;
-    }
-};
+document.getElementById('continue-btn').addEventListener('click', async () => {
+    const fileInput = document.getElementById('file-input');
+    if (!fileInput.files[0]) return alert("Sube un PDF");
 
-// Enviar el PDF al servidor
-continueBtn.addEventListener('click', async () => {
-    const file = fileInput.files[0];
-    if (!file) {
-        alert("Por favor, selecciona un PDF primero.");
-        return;
-    }
+    const btn = document.getElementById('continue-btn');
+    btn.textContent = "Analizando...";
+    btn.disabled = true;
 
     const formData = new FormData();
-    formData.append('file', file);
-
-    continueBtn.disabled = true;
-    continueBtn.textContent = "Analizando PDF... ⏳";
+    formData.append('file', fileInput.files[0]);
 
     try {
-        const response = await fetch('/api/process_pdf', {
-            method: 'POST',
-            body: formData
-        });
-
+        const response = await fetch('/api/process_pdf', { method: 'POST', body: formData });
         const data = await response.json();
 
-        if (response.ok && data.questions && data.questions.length > 0) {
-            mockQuestions = data.questions;
-            alert(`¡Éxito! Hemos extraído ${mockQuestions.length} preguntas.`);
+        if (response.ok) {
+            // LIMPIEZA DE DATOS: Quitamos ticks o marcas que Python haya traído por error
+            mockQuestions = data.questions.map(q => ({
+                ...q,
+                options: q.options.map(opt => opt.replace(/✓|✔|\[x\]/gi, '').trim()),
+                correctAnswer: q.correctAnswer.replace(/✓|✔|\[x\]/gi, '').trim()
+            }));
             
-            uploadArea.style.display = 'none';
-            modeSelectionArea.style.display = 'block';
-        } else {
-            alert(data.error || "No se detectaron preguntas en el PDF.");
-            continueBtn.disabled = false;
-            continueBtn.textContent = "Continuar ➔";
+            document.getElementById('upload-area').style.display = 'none';
+            document.getElementById('mode-selection').style.display = 'block';
         }
-    } catch (error) {
-        console.error("Error:", error);
-        alert("Error de conexión con el backend de Python.");
-        continueBtn.disabled = false;
-        continueBtn.textContent = "Continuar ➔";
-    }
+    } catch (e) { alert("Error de servidor"); }
 });
 
-// ==========================================
-// 2. SELECCIÓN DE MODO
-// ==========================================
-document.querySelectorAll('.mode-card').forEach(card => {
-    card.addEventListener('click', () => {
-        currentMode = card.dataset.mode;
-        modeSelectionArea.style.display = 'none';
-        flashcardArea.style.display = 'block';
+// Selección de Modo
+document.querySelectorAll('.mode-item').forEach(item => {
+    item.addEventListener('click', () => {
+        document.getElementById('mode-selection').style.display = 'none';
+        document.getElementById('flashcard-area').style.display = 'block';
         renderCard();
     });
 });
 
-// ==========================================
-// 3. RENDERIZADO DE CARTAS
-// ==========================================
 function renderCard() {
-    const question = mockQuestions[currentIndex];
-    const container = document.getElementById('card-container');
-    
+    const q = mockQuestions[currentIndex];
     document.getElementById('current-number').textContent = currentIndex + 1;
     document.getElementById('total-number').textContent = mockQuestions.length;
 
+    const container = document.getElementById('card-container');
     container.innerHTML = `
-        <div class="flashcard" id="main-card">
+        <div class="flashcard" onclick="this.classList.toggle('is-flipped')">
             <div class="card-inner">
-                <div class="card-front">
-                    <p class="question-text">${question.question}</p>
+                <div class="card-front" onclick="event.stopPropagation()">
+                    <p style="font-size: 1.2rem; line-height: 1.5;">${q.question}</p>
                     <div class="options-grid">
-                        ${question.options.map(opt => {
-                            const safeOpt = opt.replace(/'/g, "\\'");
-                            return `<button class="option-btn" onclick="checkAnswer('${safeOpt}')">${opt}</button>`;
-                        }).join('')}
+                        ${q.options.map(opt => `<button class="option-btn" onclick="checkAnswer('${opt.replace(/'/g, "\\'")}', event)">${opt}</button>`).join('')}
                     </div>
                 </div>
                 <div class="card-back">
-                    <h3>Respuesta Correcta</h3>
-                    <p>${question.correctAnswer}</p>
-                    <button class="next-btn" onclick="nextCard()">Siguiente Pregunta ➔</button>
+                    <h3 style="color: #34d399; margin-bottom: 10px;">Respuesta Correcta</h3>
+                    <p style="font-size: 1.1rem;">${q.correctAnswer}</p>
+                    <button class="btn-primary" style="margin-top:20px; width:auto;" onclick="nextCard(event)">Siguiente ➔</button>
                 </div>
             </div>
         </div>
     `;
 }
 
-// ==========================================
-// 4. LÓGICA DE JUEGO
-// ==========================================
-window.checkAnswer = function(selectedOption) {
-    const card = document.getElementById('main-card');
+function checkAnswer(ans, e) {
+    e.stopPropagation(); // Evita que la carta gire al pulsar la opción
     const correct = mockQuestions[currentIndex].correctAnswer;
-
-    if (selectedOption === correct) {
-        correctCount++;
-    } else {
-        incorrectCount++;
-    }
-    card.classList.add('is-flipped');
-};
-
-window.nextCard = function() {
-    currentIndex++;
-    if (currentIndex < mockQuestions.length) {
-        renderCard();
-    } else {
-        showResults();
-    }
-};
-
-function showResults() {
-    flashcardArea.style.display = 'none';
-    resultsArea.style.display = 'block';
-    document.getElementById('correct-res').textContent = correctCount;
-    document.getElementById('incorrect-res').textContent = incorrectCount;
-    const accuracy = Math.round((correctCount / mockQuestions.length) * 100);
-    document.getElementById('accuracy-res').textContent = accuracy + "%";
+    if (ans === correct) correctCount++; else incorrectCount++;
+    document.querySelector('.flashcard').classList.add('is-flipped');
 }
 
-window.restartApp = function() {
-    window.location.reload();
-};
+function nextCard(e) {
+    e.stopPropagation();
+    currentIndex++;
+    if (currentIndex < mockQuestions.length) renderCard(); else showResults();
+}
+
+function showResults() {
+    document.getElementById('flashcard-area').style.display = 'none';
+    document.getElementById('results-area').style.display = 'block';
+    document.getElementById('correct-res').textContent = correctCount;
+    document.getElementById('incorrect-res').textContent = incorrectCount;
+    document.getElementById('accuracy-res').textContent = Math.round((correctCount/mockQuestions.length)*100) + "%";
+}
