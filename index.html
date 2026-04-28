@@ -10,7 +10,7 @@
     <div class="container">
         <header id="main-header">
             <h1>📚 EasyTest</h1>
-            <p>Sube tu PDF con preguntas tipo test y genera tus tarjetas de estudio interactivas.</p>
+            <p>Sube tu PDF con preguntas tipo test y genera tus sesiones de estudio interactivas.</p>
         </header>
 
         <main>
@@ -24,7 +24,6 @@
             </div>
 
             <div id="mode-selection-area" style="display: none;">
-                
                 <button id="btn-back-upload" class="icon-btn btn-top-left">⬅️ Volver</button>
                 
                 <h2 style="color: #ffffff; margin-bottom: 20px;">Elige un modo de juego</h2>
@@ -32,7 +31,7 @@
                 <div class="modes-container">
                     <div class="mode-card" id="mode-estudio-btn">
                         <h3>🧠 Modo Estudio</h3>
-                        <p>Falla o acierta, la tarjeta se voltea al instante para enseñarte la respuesta. Ideal para asimilar conceptos.</p>
+                        <p>Falla o acierta, la respuesta se iluminará al instante y verás la explicación. Ideal para asimilar conceptos.</p>
                     </div>
                     <div class="mode-card" id="mode-puntuacion-btn">
                         <h3>🎯 Modo Puntuación</h3>
@@ -49,15 +48,23 @@
                 </div>
             </div>
 
-            <div class="flashcard-container" id="flashcard-container">
+            <div id="study-area" style="display: none;">
+                
+                <button id="btn-exit-test" class="icon-btn exit-btn btn-top-right" title="Salir del test">✖️ Salir</button>
+                
+                <div class="score-board">
+                    <span class="correct">Aciertos: <strong id="score-correct">0</strong></span>
+                    <span class="incorrect">Errores: <strong id="score-incorrect">0</strong></span>
+                </div>
+
                 <div class="quiz-card" id="quiz-card">
                     <h3>Pregunta <span id="question-counter"></span></h3>
                     <p id="question-text">¿Cargando pregunta...?</p>
+                    
                     <div id="options-container" class="options-container"></div>
                     
                     <div id="feedback-container" class="feedback-container" style="display: none;"></div>
                 </div>
-            </div>
 
                 <div class="bottom-nav" id="bottom-nav">
                     <button id="btn-prev" class="nav-btn">⬅️ Anterior</button>
