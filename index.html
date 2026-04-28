@@ -49,29 +49,15 @@
                 </div>
             </div>
 
-            <div id="study-area" style="display: none;">
-                
-                <button id="btn-exit-test" class="icon-btn exit-btn btn-top-right" title="Salir del test">✖️ Salir</button>
-                
-                <div class="score-board">
-                    <span class="correct">Aciertos: <strong id="score-correct">0</strong></span>
-                    <span class="incorrect">Errores: <strong id="score-incorrect">0</strong></span>
+            <div class="flashcard-container" id="flashcard-container">
+                <div class="quiz-card" id="quiz-card">
+                    <h3>Pregunta <span id="question-counter"></span></h3>
+                    <p id="question-text">¿Cargando pregunta...?</p>
+                    <div id="options-container" class="options-container"></div>
+                    
+                    <div id="feedback-container" class="feedback-container" style="display: none;"></div>
                 </div>
-
-                <div class="flashcard-container" id="flashcard-container">
-                    <div class="flashcard" id="flashcard">
-                        <div class="card-face card-front">
-                            <h3>Pregunta <span id="question-counter"></span></h3>
-                            <p id="question-text">¿Cargando pregunta...?</p>
-                            <div id="options-container" class="options-container"></div>
-                        </div>
-                        
-                        <div class="card-face card-back">
-                            <h3 id="feedback-title">Resultado</h3>
-                            <p id="feedback-message">...</p>
-                        </div>
-                    </div>
-                </div>
+            </div>
 
                 <div class="bottom-nav" id="bottom-nav">
                     <button id="btn-prev" class="nav-btn">⬅️ Anterior</button>
