@@ -8,7 +8,7 @@ import google.generativeai as genai
 app = Flask(__name__)
 CORS(app)
 
-# Configurar Gemini con la clave que guardaste en Vercel
+# Configurar Gemini
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 genai.configure(api_key=GEMINI_API_KEY)
 
@@ -29,13 +29,11 @@ def process_pdf():
         return jsonify({"error": "Archivo no seleccionado"}), 400
 
     try:
-        # 1. Extraer el texto bruto del PDF
         raw_text = extract_text_from_pdf(file)
         
-        # 2. Configurar el modelo (usamos gemini-1.5-flash por ser el más rápido y eficiente)
+        # Intentamos con el modelo estándar por ahora
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        # 3. Crear el "Prompt" (las instrucciones para la IA)
         prompt = f"""
         Actúa como un extractor de datos experto. Lee el siguiente texto extraído de un PDF de preguntas tipo test.
         Tu objetivo es identificar todas las preguntas y devolverlas en un formato JSON estrictamente estructurado.
@@ -61,20 +59,22 @@ def process_pdf():
         {raw_text}
         """
 
-        # 4. Llamar a la IA
         response = model.generate_content(prompt)
-        
-        # 5. Limpiar la respuesta (a veces la IA añade bloques de código ```json)
         cleaned_response = response.text.replace('```json', '').replace('```', '').strip()
-        
-        # 6. Convertir el texto de la IA en datos reales de Python
         questions_data = json.loads(cleaned_response)
 
         return jsonify({"questions": questions_data})
 
     except Exception as e:
-        print(f"Error detallado: {str(e)}")
-        return jsonify({"error": f"Error técnico: {str(e)}"}), 500
+        # ==========================================
+        # MODO DETECTIVE: PREGUNTAMOS QUÉ MODELOS TIENES
+        # ==========================================
+        try:
+            available_models = [m.name.replace('models/', '') for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            lista_texto = ", ".join(available_models)
+            return jsonify({"error": f"Vaya... Tu API Key solo tiene permiso para usar estos modelos exactos: {lista_texto}"}), 500
+        except Exception as e_models:
+            return jsonify({"error": f"Error grave de conexión: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
