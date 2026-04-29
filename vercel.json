@@ -2,17 +2,33 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/process_pdf.py",
+      "src": "api/*.py",
       "use": "@vercel/python",
       "config": {
         "maxDuration": 60
       }
+    },
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.js",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "api/$1"
+      "dest": "api/process_pdf.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
     }
   ]
 }
