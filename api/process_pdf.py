@@ -31,43 +31,48 @@ def process_pdf():
     try:
         raw_text = extract_text_from_pdf(file)
         
-        # ¡AQUÍ ESTÁ LA SOLUCIÓN! Usamos el modelo moderno al que sí tienes acceso
+        # Usamos el modelo 2.5-flash que es el que tienes activo y es ultra rápido
         model = genai.GenerativeModel('gemini-2.5-flash')
         
         prompt = f"""
         Actúa como un extractor de datos experto. Lee el siguiente texto extraído de un PDF de preguntas tipo test.
-        Tu objetivo es identificar todas las preguntas y devolverlas en un formato JSON estrictamente estructurado.
+        Tu objetivo es identificar las preguntas y devolverlas en un formato JSON estrictamente estructurado.
         
+        REGLA CRÍTICA DE VELOCIDAD: Extrae un MÁXIMO de 20 preguntas. 
+        Si el documento tiene muchas preguntas, selecciona las 20 primeras o una muestra representativa. 
+        Esto es para asegurar que la respuesta no tarde demasiado y el servidor no corte la conexión.
+
         Para cada pregunta debes extraer:
         - La pregunta completa.
         - Una lista de opciones (mínimo 3).
         - La respuesta correcta (debe coincidir exactamente con una de las opciones).
-        - Una breve explicación de por qué esa es la respuesta correcta (basándote en el texto o en tu conocimiento si el texto no lo indica).
+        - Una breve explicación de por qué esa es la respuesta correcta.
 
-        IMPORTANTE: Devuelve ÚNICAMENTE el código JSON, sin textos explicativos antes ni después.
-        El formato debe ser una lista de objetos:
+        IMPORTANTE: Devuelve ÚNICAMENTE el código JSON. No incluyas "```json" ni texto extra.
+        El formato debe ser:
         [
           {{
             "question": "¿Pregunta?",
             "options": ["opción A", "opción B", "opción C"],
             "correctAnswer": "opción B",
-            "explanation": "Explicación detallada..."
+            "explanation": "..."
           }}
         ]
 
-        Aquí está el texto:
+        Aquí está el texto del PDF:
         {raw_text}
         """
 
         response = model.generate_content(prompt)
         
-        # Limpiamos la respuesta para asegurarnos de que el JSON es válido
+        # Limpieza de seguridad por si la IA mete etiquetas de bloque de código
         cleaned_response = response.text.replace('```json', '').replace('```', '').strip()
         questions_data = json.loads(cleaned_response)
 
         return jsonify({"questions": questions_data})
 
     except Exception as e:
+        # Devolvemos el error técnico real para poder debuguear si algo falla
         return jsonify({"error": f"Error técnico real: {str(e)}"}), 500
 
 if __name__ == '__main__':
