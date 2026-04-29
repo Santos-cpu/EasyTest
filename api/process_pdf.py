@@ -8,7 +8,7 @@ import google.generativeai as genai
 app = Flask(__name__)
 CORS(app)
 
-# Configurar Gemini
+# Configurar Gemini con la clave de entorno
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 genai.configure(api_key=GEMINI_API_KEY)
 
@@ -29,51 +29,52 @@ def process_pdf():
         return jsonify({"error": "Archivo no seleccionado"}), 400
 
     try:
+        # Extraer el texto del PDF
         raw_text = extract_text_from_pdf(file)
         
-        # Usamos el modelo 2.5-flash que es el que tienes activo y es ultra rápido
+        # Usamos gemini-2.5-flash por su alta velocidad
         model = genai.GenerativeModel('gemini-2.5-flash')
         
+        # Prompt optimizado para velocidad y límite de 20 preguntas
         prompt = f"""
-        Actúa como un extractor de datos experto. Lee el siguiente texto extraído de un PDF de preguntas tipo test.
-        Tu objetivo es identificar las preguntas y devolverlas en un formato JSON estrictamente estructurado.
+        Actúa como un profesor experto. Tu tarea es extraer preguntas de opción múltiple del siguiente texto.
         
-        REGLA CRÍTICA DE VELOCIDAD: Extrae un MÁXIMO de 20 preguntas. 
-        Si el documento tiene muchas preguntas, selecciona las 20 primeras o una muestra representativa. 
-        Esto es para asegurar que la respuesta no tarde demasiado y el servidor no corte la conexión.
+        REGLA DE ORO: Extrae un MÁXIMO de 20 preguntas. No intentes procesar más, aunque el texto sea largo.
+        
+        Para cada pregunta, genera:
+        1. La pregunta clara.
+        2. Un array de opciones (mínimo 3).
+        3. La respuesta correcta (debe ser idéntica a una de las opciones).
+        4. Una breve explicación educativa.
 
-        Para cada pregunta debes extraer:
-        - La pregunta completa.
-        - Una lista de opciones (mínimo 3).
-        - La respuesta correcta (debe coincidir exactamente con una de las opciones).
-        - Una breve explicación de por qué esa es la respuesta correcta.
+        Responde ÚNICAMENTE con un JSON válido (una lista de objetos). Sin texto adicional ni bloques de código.
 
-        IMPORTANTE: Devuelve ÚNICAMENTE el código JSON. No incluyas "```json" ni texto extra.
-        El formato debe ser:
+        Formato esperado:
         [
           {{
-            "question": "¿Pregunta?",
-            "options": ["opción A", "opción B", "opción C"],
-            "correctAnswer": "opción B",
-            "explanation": "..."
+            "question": "¿Ejemplo de pregunta?",
+            "options": ["A", "B", "C"],
+            "correctAnswer": "A",
+            "explanation": "Porque..."
           }}
         ]
 
-        Aquí está el texto del PDF:
+        Texto del PDF:
         {raw_text}
         """
 
+        # Generar contenido
         response = model.generate_content(prompt)
         
-        # Limpieza de seguridad por si la IA mete etiquetas de bloque de código
-        cleaned_response = response.text.replace('```json', '').replace('```', '').strip()
-        questions_data = json.loads(cleaned_response)
+        # Limpiar posibles etiquetas de la respuesta
+        json_text = response.text.replace('```json', '').replace('```', '').strip()
+        questions_data = json.loads(json_text)
 
         return jsonify({"questions": questions_data})
 
     except Exception as e:
-        # Devolvemos el error técnico real para poder debuguear si algo falla
-        return jsonify({"error": f"Error técnico real: {str(e)}"}), 500
+        # Error detallado para depuración
+        return jsonify({"error": f"Error técnico: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
