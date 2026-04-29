@@ -33,7 +33,7 @@ def process_pdf():
         raw_text = extract_text_from_pdf(file)
         
         # 2. Configurar el modelo (usamos gemini-1.5-flash por ser el más rápido y eficiente)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         # 3. Crear el "Prompt" (las instrucciones para la IA)
         prompt = f"""
