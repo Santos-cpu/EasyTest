@@ -1,80 +1,80 @@
+import os
+import json
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import PyPDF2
-import re
+import google.generativeai as genai
 
 app = Flask(__name__)
+CORS(app)
 
-def extract_questions(text):
-    questions = []
-    # Segmentar por números de pregunta
-    raw_blocks = re.split(r'\n(\d+[\.\)])', text)
-    
-    for i in range(1, len(raw_blocks), 2):
-        q_number = raw_blocks[i]
-        q_content = raw_blocks[i+1] if i+1 < len(raw_blocks) else ""
-        
-        # Segmentar por opciones (a, b, c, d)
-        options = re.split(r'\n([a-dA-D][\.\)])', q_content)
-        
-        if len(options) > 1:
-            pregunta_texto = options[0].strip()
-            lista_opciones = []
-            explicacion = ""
-            
-            for j in range(1, len(options), 2):
-                opt_label = options[j]
-                opt_text = options[j+1].strip() if j+1 < len(options) else ""
-                
-                # 🔴 NUEVO: Buscar si existe la palabra "Explicación:" dentro de la opción
-                # El (?i) lo hace insensible a mayúsculas/minúsculas
-                exp_match = re.search(r'(?i)(explicaci[oó]n:)(.*)', opt_text, re.DOTALL)
-                
-                if exp_match:
-                    # Guardamos la explicación sin la palabra clave
-                    explicacion = exp_match.group(2).strip()
-                    # Recortamos la opción para quitar la explicación
-                    opt_text = opt_text[:exp_match.start()].strip()
-                
-                # Limpiar ticks
-                opt_clean = opt_text.replace('✓', '').replace('✔', '').strip()
-                lista_opciones.append(f"{opt_label} {opt_clean}")
-            
-            # Buscar cuál era la correcta (donde estaba el tick)
-            correct_idx = 0
-            for idx, raw_opt in enumerate(options[2::2]):
-                if '✓' in raw_opt or '✔' in raw_opt:
-                    correct_idx = idx
-                    break
+# Configurar Gemini con la clave de entorno
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+genai.configure(api_key=GEMINI_API_KEY)
 
-            questions.append({
-                "question": pregunta_texto,
-                "options": lista_opciones,
-                "correctAnswer": lista_opciones[correct_idx] if lista_opciones else "",
-                "explanation": explicacion # 🔴 Pasamos la explicación a JS
-            })
-    return questions
+def extract_text_from_pdf(pdf_file):
+    reader = PyPDF2.PdfReader(pdf_file)
+    text = ""
+    for page in reader.pages:
+        text += page.extract_text()
+    return text
 
 @app.route('/api/process_pdf', methods=['POST'])
 def process_pdf():
     if 'file' not in request.files:
-        return jsonify({"error": "No se envió archivo"}), 400
+        return jsonify({"error": "No se subió ningún archivo"}), 400
     
     file = request.files['file']
-    try:
-        pdf_reader = PyPDF2.PdfReader(file)
-        full_text = ""
-        for page in pdf_reader.pages:
-            full_text += page.extract_text() + "\n"
-        
-        extracted = extract_questions(full_text)
-        
-        return jsonify({
-            "status": "success",
-            "filename": file.filename,
-            "questions": extracted
-        }), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    if file.filename == '':
+        return jsonify({"error": "Archivo no seleccionado"}), 400
 
-def handler(request):
-    return app(request.environ, lambda status, headers: None)
+    try:
+        # Extraer el texto del PDF
+        raw_text = extract_text_from_pdf(file)
+        
+        # Usamos gemini-2.5-flash por su alta velocidad
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        # Prompt optimizado para velocidad y límite de 20 preguntas
+        prompt = f"""
+        Actúa como un profesor experto. Tu tarea es extraer preguntas de opción múltiple del siguiente texto.
+        
+        REGLA DE ORO: Extrae un MÁXIMO de 20 preguntas. No intentes procesar más, aunque el texto sea largo.
+        
+        Para cada pregunta, genera:
+        1. La pregunta clara.
+        2. Un array de opciones (mínimo 3).
+        3. La respuesta correcta (debe ser idéntica a una de las opciones).
+        4. Una breve explicación educativa.
+
+        Responde ÚNICAMENTE con un JSON válido (una lista de objetos). Sin texto adicional ni bloques de código.
+
+        Formato esperado:
+        [
+          {{
+            "question": "¿Ejemplo de pregunta?",
+            "options": ["A", "B", "C"],
+            "correctAnswer": "A",
+            "explanation": "Porque..."
+          }}
+        ]
+
+        Texto del PDF:
+        {raw_text}
+        """
+
+        # Generar contenido
+        response = model.generate_content(prompt)
+        
+        # Limpiar posibles etiquetas de la respuesta
+        json_text = response.text.replace('```json', '').replace('```', '').strip()
+        questions_data = json.loads(json_text)
+
+        return jsonify({"questions": questions_data})
+
+    except Exception as e:
+        # Error detallado para depuración
+        return jsonify({"error": f"Error técnico: {str(e)}"}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
