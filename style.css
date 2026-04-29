@@ -109,7 +109,7 @@ button:disabled {
    NUEVA TARJETA TIPO TEST ESTÁTICA
    ======================================= */
 .quiz-card {
-    background-color: #111115; /* Fondo muy oscuro, casi negro */
+    background-color: #111115;
     border: 1px solid #22222a;
     border-radius: 16px;
     padding: 40px;
@@ -166,15 +166,15 @@ button:disabled {
 
 /* ILUMINACIÓN VERDE (CORRECTO) */
 .option-btn.correct-answer {
-    background-color: rgba(22, 60, 36, 0.6) !important; /* Verde oscuro */
-    border-color: #2ecc71 !important; /* Borde verde brillante */
+    background-color: rgba(22, 60, 36, 0.6) !important;
+    border-color: #2ecc71 !important;
     color: #ffffff !important;
 }
 
 /* ILUMINACIÓN ROJA (INCORRECTO) */
 .option-btn.wrong-answer {
-    background-color: rgba(60, 22, 22, 0.6) !important; /* Rojo oscuro */
-    border-color: #e74c3c !important; /* Borde rojo brillante */
+    background-color: rgba(60, 22, 22, 0.6) !important;
+    border-color: #e74c3c !important;
     color: #ffffff !important;
 }
 
@@ -184,7 +184,7 @@ button:disabled {
 .feedback-container {
     margin-top: 20px;
     padding: 25px;
-    background-color: #161620; /* Azul muy muy oscuro */
+    background-color: #161620;
     border: 1px solid #2a2a3a;
     border-radius: 12px;
     color: #e2e8f0;
@@ -192,7 +192,7 @@ button:disabled {
 }
 
 .feedback-title {
-    color: #6a82fb; /* Tono violeta/azulado */
+    color: #6a82fb;
     font-size: 13px;
     font-weight: 800;
     text-transform: uppercase;
@@ -228,3 +228,47 @@ button:disabled {
 .mistake-correct { color: #2ecc71; }
 .results-actions { display: flex; flex-direction: row; width: 100%; max-width: 600px; gap: 15px; }
 .results-actions button { flex: 1; }
+
+/* =======================================
+   MODAL FLOTANTE DE SALIDA
+   ======================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeInModal 0.3s ease forwards;
+}
+
+.modal-card {
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    background-color: #1a1a24;
+    padding: 40px;
+}
+
+.modal-card::-webkit-scrollbar {
+    width: 8px;
+}
+.modal-card::-webkit-scrollbar-track {
+    background: #1a1a24; 
+}
+.modal-card::-webkit-scrollbar-thumb {
+    background: #333344; 
+    border-radius: 4px;
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
