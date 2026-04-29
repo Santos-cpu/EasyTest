@@ -272,3 +272,23 @@ button:disabled {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
 }
+
+/* =======================================
+   BARRA DE CARGA ANIMADA
+   ======================================= */
+.progress-bar-bg {
+    width: 100%;
+    height: 12px;
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #333;
+}
+
+.progress-bar-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #2ecc71, #27ae60);
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
+    transition: width 0.4s ease;
+}
