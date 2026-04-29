@@ -31,8 +31,8 @@ def process_pdf():
     try:
         raw_text = extract_text_from_pdf(file)
         
-        # Intentamos con el modelo estándar por ahora
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # ¡AQUÍ ESTÁ LA SOLUCIÓN! Usamos el modelo moderno al que sí tienes acceso
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
         prompt = f"""
         Actúa como un extractor de datos experto. Lee el siguiente texto extraído de un PDF de preguntas tipo test.
@@ -60,21 +60,16 @@ def process_pdf():
         """
 
         response = model.generate_content(prompt)
+        
+        # Limpiamos la respuesta para asegurarnos de que el JSON es válido
         cleaned_response = response.text.replace('```json', '').replace('```', '').strip()
         questions_data = json.loads(cleaned_response)
 
         return jsonify({"questions": questions_data})
 
     except Exception as e:
-        # ==========================================
-        # MODO DETECTIVE: PREGUNTAMOS QUÉ MODELOS TIENES
-        # ==========================================
-        try:
-            available_models = [m.name.replace('models/', '') for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-            lista_texto = ", ".join(available_models)
-            return jsonify({"error": f"Vaya... Tu API Key solo tiene permiso para usar estos modelos exactos: {lista_texto}"}), 500
-        except Exception as e_models:
-            return jsonify({"error": f"Error grave de conexión: {str(e)}"}), 500
+        print(f"Error técnico: {str(e)}")
+        return jsonify({"error": "Hubo un problema al procesar el PDF con la IA. Asegúrate de que el PDF contiene texto legible y no solo imágenes escaneadas."}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
