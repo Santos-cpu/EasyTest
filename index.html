@@ -20,53 +20,53 @@
                     <button id="browse-btn" class="primary-btn">Seleccionar Archivo PDF</button>
                     <p id="file-name" class="file-name-text">Ningún archivo seleccionado</p>
                 </div>
+                
                 <button id="continue-btn" class="success-btn" style="display: none;">Continuar ➔</button>
+
+                <div id="loading-container" style="display: none; margin-top: 20px;">
+                    <div class="progress-bar-bg">
+                        <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                    </div>
+                    <p id="loading-text" style="margin-top: 10px; color: #888; font-size: 14px;">Iniciando análisis con IA...</p>
+                </div>
             </div>
 
             <div id="mode-selection-area" style="display: none;">
                 <button id="btn-back-upload" class="icon-btn btn-top-left">⬅️ Volver</button>
-                
                 <h2 style="color: #ffffff; margin-bottom: 20px;">Elige un modo de juego</h2>
-                
                 <div class="modes-container">
                     <div class="mode-card" id="mode-estudio-btn">
                         <h3>🧠 Modo Estudio</h3>
-                        <p>Falla o acierta, la respuesta se iluminará al instante y verás la explicación. Ideal para asimilar conceptos.</p>
+                        <p>Falla o acierta, la respuesta se iluminará al instante y verás la explicación.</p>
                     </div>
                     <div class="mode-card" id="mode-puntuacion-btn">
                         <h3>🎯 Modo Puntuación</h3>
-                        <p>Responde a tu ritmo. Las respuestas correctas e incorrectas se revelarán solo al finalizar el test.</p>
+                        <p>Responde a tu ritmo. Los resultados se revelarán solo al finalizar el test.</p>
                     </div>
                     <div class="mode-card" id="mode-examen-btn">
                         <h3>⏱️ Modo Examen</h3>
-                        <p>Simulacro real: 30 preguntas seleccionadas al azar de tu PDF. Resultados ocultos hasta el final.</p>
+                        <p>Simulacro real: 20 preguntas seleccionadas al azar. Resultados al final.</p>
                     </div>
                     <div class="mode-card" id="mode-hardcore-btn">
                         <h3>🔥 Modo Hardcore</h3>
-                        <p>Solo para valientes. 30 preguntas al azar donde cada 2 fallos te restan 1 acierto. ¡Cuidado!</p>
+                        <p>¡Cuidado! Cada 2 fallos te restan 1 acierto. Solo para valientes.</p>
                     </div>
                 </div>
             </div>
 
             <div id="study-area" style="display: none;">
-                
                 <button id="btn-exit-test" class="icon-btn exit-btn btn-top-right" title="Salir del test">✖️ Salir</button>
-                
                 <div class="score-board">
                     <span class="correct">Aciertos: <strong id="score-correct">0</strong></span>
                     <span class="incorrect">Errores: <strong id="score-incorrect">0</strong></span>
                 </div>
-
                 <div class="quiz-card" id="quiz-card">
                     <h3>Pregunta <span id="question-counter"></span></h3>
                     <p id="question-text">¿Cargando pregunta...?</p>
-                    
                     <div id="options-container" class="options-container"></div>
-                    
                     <div id="feedback-container" class="feedback-container" style="display: none;"></div>
                 </div>
-
-                <div class="bottom-nav" id="bottom-nav">
+                <div class="bottom-nav">
                     <button id="btn-prev" class="nav-btn">⬅️ Anterior</button>
                     <button id="btn-next" class="nav-btn primary-btn">Siguiente ➡️</button>
                 </div>
@@ -81,32 +81,28 @@
                     </div>
                     <div id="mistakes-review" class="mistakes-container"></div>
                 </div>
-
                 <div class="results-actions">
-                    <button id="btn-restart-mode" class="primary-btn">Elegir otro modo con este PDF</button>
+                    <button id="btn-restart-mode" class="primary-btn">Elegir otro modo</button>
                     <button id="btn-new-pdf" class="secondary-btn">Subir un PDF nuevo</button>
                 </div>
             </div>
 
             <div id="exit-modal" class="modal-overlay" style="display: none;">
-                <div class="modal-card results-card">
+                <div class="modal-card results-card" style="border: 2px solid #e74c3c;">
                     <h2>Progreso actual 📊</h2>
                     <div class="results-scores">
                         <p>Aciertos: <span id="modal-correct" class="correct-text">0</span></p>
                         <p>Errores: <span id="modal-incorrect" class="incorrect-text">0</span></p>
                     </div>
                     <div id="modal-mistakes" class="mistakes-container"></div>
-                    
                     <div class="results-actions" style="margin-top: 20px;">
                         <button id="btn-cancel-exit" class="secondary-btn">Volver al test</button>
                         <button id="btn-confirm-exit" class="primary-btn">Salir al menú</button>
                     </div>
                 </div>
             </div>
-
         </main>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
