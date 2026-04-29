@@ -31,6 +31,14 @@ const mistakesReview = document.getElementById('mistakes-review');
 const btnRestartMode = document.getElementById('btn-restart-mode');
 const btnNewPdf = document.getElementById('btn-new-pdf');
 
+// Nuevas Referencias para el Modal
+const exitModal = document.getElementById('exit-modal');
+const btnCancelExit = document.getElementById('btn-cancel-exit');
+const btnConfirmExit = document.getElementById('btn-confirm-exit');
+const modalCorrect = document.getElementById('modal-correct');
+const modalIncorrect = document.getElementById('modal-incorrect');
+const modalMistakes = document.getElementById('modal-mistakes');
+
 // Estado Global
 let mockQuestions = []; 
 let currentIndex = 0;
@@ -88,7 +96,7 @@ if (continueBtn) {
 }
 
 // ==========================================
-// NAVEGACIÓN DE PANTALLAS
+// NAVEGACIÓN DE PANTALLAS Y MODAL
 // ==========================================
 if (btnBackUpload) {
     btnBackUpload.addEventListener('click', () => {
@@ -110,7 +118,59 @@ function exitToModeSelection() {
     if(scoreIncorrectDisplay) scoreIncorrectDisplay.textContent = '0';
 }
 
-if(btnExitTest) btnExitTest.addEventListener('click', exitToModeSelection);
+// NUEVA LÓGICA DEL MODAL AL PULSAR "SALIR"
+function showExitModal() {
+    if(!exitModal) return;
+    
+    // Llenamos los datos actuales
+    if(modalCorrect) modalCorrect.textContent = correctCount;
+    if(modalIncorrect) modalIncorrect.textContent = incorrectCount;
+    
+    if(modalMistakes) {
+        modalMistakes.innerHTML = '';
+        
+        if (incorrectCount > 0) {
+            modalMistakes.innerHTML = '<h3 style="color:#aaa;margin-bottom:15px;">Tus errores hasta ahora:</h3>';
+            mockQuestions.forEach((q, i) => {
+                // Evaluamos SOLO las que ya se han contestado
+                if (userAnswers[i] !== null && userAnswers[i] !== q.correctAnswer) {
+                    const div = document.createElement('div');
+                    div.className = 'mistake-item';
+                    div.innerHTML = `
+                        <p class="mistake-question">${i + 1}. ${q.question}</p>
+                        <p class="mistake-wrong">❌ Tu respuesta: ${userAnswers[i]}</p>
+                        <p class="mistake-correct">✅ Correcta: ${q.correctAnswer}</p>`;
+                    modalMistakes.appendChild(div);
+                }
+            });
+        } else if (correctCount > 0) {
+            modalMistakes.innerHTML = '<p style="color:#2ecc71;font-weight:bold;text-align:center;margin: 20px 0;">¡Vas perfecto! Cero errores por ahora. 🥇</p>';
+        } else {
+            modalMistakes.innerHTML = '<p style="color:#aaa;text-align:center;margin: 20px 0;">Aún no has respondido ninguna pregunta.</p>';
+        }
+    }
+    
+    // Mostramos la tarjeta flotante
+    exitModal.style.display = 'flex';
+}
+
+// Botón ✖️ Salir ahora abre el modal
+if(btnExitTest) btnExitTest.addEventListener('click', showExitModal);
+
+// Botones dentro del Modal
+if(btnCancelExit) {
+    btnCancelExit.addEventListener('click', () => {
+        exitModal.style.display = 'none'; // Oculta y sigue jugando
+    });
+}
+
+if(btnConfirmExit) {
+    btnConfirmExit.addEventListener('click', () => {
+        exitModal.style.display = 'none'; // Cierra el modal
+        exitToModeSelection(); // Ejecuta el borrado y salida final
+    });
+}
+
 if(btnRestartMode) btnRestartMode.addEventListener('click', exitToModeSelection);
 if(btnNewPdf) btnNewPdf.addEventListener('click', () => location.reload());
 
@@ -141,7 +201,6 @@ function startMode(selectedMode) {
 // LÓGICA DE JUEGO
 // ==========================================
 function loadQuestion() {
-    // ASEGURAMOS QUE LA EXPLICACIÓN SE OCULTE AL CARGAR LA PREGUNTA
     const feedbackContainer = document.getElementById('feedback-container');
     if (feedbackContainer) {
         feedbackContainer.style.display = 'none';
@@ -177,7 +236,6 @@ function loadQuestion() {
             });
         }
         
-        // Solo la mostramos si la pregunta YA estaba respondida de antes
         if (userAnswers[currentIndex] !== null) {
             showExplanation(currentQ);
         }
@@ -212,7 +270,6 @@ function checkAnswer(selectedOption, correctAnswer, clickedBtn) {
         
         userAnswers[currentIndex] = selectedOption; 
         
-        // Mostrar explicación al contestar
         showExplanation(currentQ);
     }
 }
@@ -221,7 +278,7 @@ function showExplanation(questionData) {
     const container = document.getElementById('feedback-container');
     if(!container) return;
     
-    container.style.display = 'block'; // AQUÍ SE REVELA LA CAJA
+    container.style.display = 'block'; 
     
     let explanationText = questionData.explanation 
         ? questionData.explanation 
