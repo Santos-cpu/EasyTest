@@ -73,8 +73,8 @@ def process_pdf():
         return jsonify({"questions": questions_data})
 
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({"error": "La IA no pudo procesar este PDF. Asegúrate de que contenga preguntas legibles."}), 500
+        print(f"Error detallado: {str(e)}")
+        return jsonify({"error": f"Error técnico: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
